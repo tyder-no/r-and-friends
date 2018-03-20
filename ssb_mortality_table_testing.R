@@ -232,8 +232,50 @@ getProbabilityOfDeathTable <- function(){
 
 #mort2016 <- getMortalityYearsDataTable(yearsPicked=c(51))
 #mort20142016 <- getMortalityYearsDataTable(yearsPicked=c(49,50,51))
+#tableData <- getAllMortalityData07902()
+
+#> t2017 <-  t07902[t07902$Tid==2017,]
+#> table(t2017$ContentsCode)
+#             Dode Dodssannsynlighet   ForvGjenLevetid   LevendePerTusen 
+#              321               321               321               321 
+#> lx <-  t2017[t2017$ContentsCode=="LevendePerTusen",5]
+#> ex <-  t2017[t2017$ContentsCode=="ForvGjenLevetid",5]
+#> qx <-  t2017[t2017$ContentsCode=="Dodssannsynlighet",5]
+#> dx <-  t2017[t2017$ContentsCode=="Dode",5]
+#> t2017d <-  t07902[t07902$Tid==2017&t07902$ContentsCode=="Dode",]
+#> b2017 <- t2017d ;
+#> b2017$value <- NULL ; b2017$ContentsCode <- NULL ;
+#> dt2017 <- data.frame(b2017,lx,qx,dx,ex)
+
+mortTableYear <- function(year,df=t07902) {
+    tYr <-  df[df$Tid==year,] ; tYrD <-  tYr[tYr$ContentsCode=="Dode",] ;
+    bYr <- tYrD ; bYr$value <- NULL ; bYr$ContentsCode <- NULL ; bYr$Tid <- NULL ;
+    cCodes <- c("Dode","Dodssannsynlighet","ForvGjenLevetid","LevendePerTusen") 
+    mData <- matrix(0,nrow=length(bYr[,1]),ncol=4)
+    for (i in 1:4) mData[,i] <- tYr[tYr$ContentsCode==cCodes[i],5] 
+    dfYr <- data.frame(bYr,mData)
+    names(dfYr) = c("Kjonn","AlderX","dx","qx","ex","lx") ;
+    dfYr 
+}
 
 
+#> dt2017All <- dt2017[dt2017$Kjonn==0,]
+#> dt2017M <- dt2017[dt2017$Kjonn==1,]
+#> dt2017F <- dt2017[dt2017$Kjonn==2,]
+#> plot(as.numeric(dt2017All$AlderX),dt2017All$ex)
+#> points(as.numeric(dt2017All$AlderX),dt2017M$ex,type="l",col=4)
+#> points(as.numeric(dt2017All$AlderX),dt2017F$ex,type="l",col=2)
 
+testPlotEX <- function(df,savePng=0) {
+    plotter <- function(y,newP=0,col=1) {
+        if (newP==1) plot(as.numeric(dfA$AlderX),y,type="l",xlab="Age",ylab="Expected years left",col=col)
+        else points(as.numeric(dfA$AlderX),y,type="l",col=col)
+        legend(65,75,col=c(1,2,4),lty=c(1,1,1),legend=c("All","Women","Men"))
+    }
 
-
+    X11()
+    if (savePng>0) png(file="life_expect_0.png") ;
+    dfA <- df[df$Kjonn==0,] ;  dfM <- df[df$Kjonn==1,] ; dfF <- df[df$Kjonn==2,] ;
+    plotter(dfA$ex,newP=1) ;  plotter(dfM$ex,col=4) ;  plotter(dfF$ex,col=2) ;
+    if (savePng>0) dev.off() ;
+}

@@ -8,6 +8,7 @@ library(jsonlite)
 #source("ssb-json-functions.R")
 
 
+
 #
 ##########################################################
 ########## Fetching data/metadata from SSB ###############
@@ -82,7 +83,7 @@ getValuesAndLabels <- function(tableId) {
 #
 #
 
-createSearchDF <- function(metaDF){
+createQueryDF <- function(metaDF){
 
     srchDF <- fromJSON(getQueryData99999())
     srchDFq  <-  srchDF$query
@@ -143,16 +144,25 @@ queryFromDF <- function(df){
     
 }    
 
-#  createSearchFromDF - Creates  json search query from marked-up metadata 
+#  createQueryFromDF - Creates  json search query from marked-up metadata 
 #  Parameter: markedValueLabelsDF - list of data frames marked for selection
 
-createSearchFromDF <- function(markedValueLabelsDF){
+createQueryFromDF <- function(markedValueLabelsDF){
 
-   sDF <- createSearchDF(markedValueLabelsDF)
+   sDF <- createQueryDF(markedValueLabelsDF)
    queryFromDF(sDF)
 
 }
 
+
+createQueryForAllVars <- function(tableId)  {
+
+    vlDF <- getValuesAndLabels(tableId) 
+    nVar <- length(vlDF) ; 
+    for (i in 1:nVar) vlDF[[i]][1,3] <- 10 ;
+    createQueryFromDF(vlDF)
+
+}
 
 
 # Queries for SSB statbank - structure

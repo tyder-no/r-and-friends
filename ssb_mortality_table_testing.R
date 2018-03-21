@@ -95,7 +95,7 @@ getMortalityYearsData <- function(yearsPicked){
     
     metaData <- getMDValuesLabels07902() ;     
     mdVL <- pickMortalityYears(metaData,yearsPicked=yearsPicked) ;
-    eQuery <- createSearchFromDF(mdVL) ;
+    eQuery <- createQueryFromDF(mdVL) ;
     eData <- getJSONData("07902",eQuery)
   
     eData
@@ -160,7 +160,7 @@ getMortalityData <- function(contCode){
     
     metaData <- getMDValuesLabels07902() ;     
     mdVL <- pickMortalityVars(metaData,contCode=contCode) ;
-    eQuery <- createSearchFromDF(mdVL) ;
+    eQuery <- createQueryFromDF(mdVL) ;
     eData <- getJSONData("07902",eQuery)
     eData$ContentsCode <- NULL # Drop trivial column
     eData

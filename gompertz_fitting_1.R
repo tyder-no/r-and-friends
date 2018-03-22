@@ -136,10 +136,15 @@ plotMortalityParameters <- function(resM,regrStart=50,lastPerStart=2007,savePng=
     aFitF25 <- lm(a0F[yrs>lastPerStart]~resM[yrs>lastPerStart,1]) ;    bFitF25 <- lm(resM[yrs>lastPerStart,5]~resM[yrs>lastPerStart,1])
     aCoefM25 <- aFitM25$coef ; bCoefM25 <- bFitM25$coef ;
     aCoefF25 <- aFitF25$coef ; bCoefF25 <- bFitF25$coef ;    
-   
+
+    abM25<- lm(resM[yrs>lastPerStart,3]~a0M[yrs>lastPerStart]) ; abF25<- lm(resM[yrs>lastPerStart,5]~a0F[yrs>lastPerStart]) ;  
+    abCoefM25 <- abM25$coef ; abCoefF25 <- abF25$coef ;
+    print(paste(abCoefM25, abCoefF25))
+
+    
     if (savePng>0) png(filename='gomp_f1.png',width=1000,height=600)
-    else  X11(width=12,height=7)
-    par(mfrow=c(1,2))
+    else  X11(width=12,height=6)
+    par(mfrow=c(1,3))
     plot(yrs,a0M,col=4,ylim=c(-12.5,-9.5),xlab="Year",ylab="Basic mortality",main="Parameter a in y=a+bx")
     points(yrs,a0F,col=2)
     abline(aCoefM[1],aCoefM[2],col=4)
@@ -154,10 +159,18 @@ plotMortalityParameters <- function(resM,regrStart=50,lastPerStart=2007,savePng=
     abline(bCoefF[1],bCoefF[2],col=2)
     abline(bCoefM25[1],bCoefM25[2],col=4,lty=3)
     abline(bCoefF25[1],bCoefF25[2],col=2,lty=3)
+
+    plot(a0M,resM[,3],col=4,xlim=c(-12.5,-9.5),ylim=c(0.09,0.12),xlab="a-parameter",ylab="b-parameter",main="b vs a parameters in y=a+bx")
+    points(a0F,resM[,5],col=2)
+    abline(abCoefM25[1],abCoefM25[2],lty=4,col=4)
+    abline(abCoefF25[1],abCoefF25[2],lty=4,col=2)
+    
     
     if (savePng>0) dev.off()
     else dev.copy2eps(device=x11,file='gomp_f1.eps') ;
-    
+
+   
+  
     c(aCoefM25[1],aCoefM25[2],aCoefF25[1],aCoefF25[2],bCoefM25[1],bCoefM25[2],bCoefF25[1],bCoefF25[2])
     
 }
@@ -266,7 +279,7 @@ plotHistHistograms <- function(resM) {
      
 }
 
-
+ logHazard <- function(x,lambda,a=-11.5,b=0.105){ a + b*x + log(1+lambda*exp(-(a+b*x)))   }
 
 testMakehamHazard <- function(lambda0,lambdaStep=1.1,a=-11.5,b=0.105) {
 

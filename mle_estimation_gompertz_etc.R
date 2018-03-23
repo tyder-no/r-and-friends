@@ -1,7 +1,7 @@
 options(encoding="UTF-8")
                                         #
 #
-# source("generalized_gompertz_1.R")
+# source("mle_estimation_gompertz_etc.R")
 #
 #library(ggplot)
 
@@ -61,6 +61,20 @@ prepareHx <- function(hdF) {
     data.frame(hx = diff(lxm$Hx), x = midpoints(lxm$age))
 }
 
+prepareDx <- function(hdF) {
+    data.frame(dx = -diff(hdF$lx), x = midpoints(hdF$age))
+}
+
+prepareYearMFDx <- function(sT,yearStr) {
+
+    yearMF <- prepareYearMF(sT,yearStr)
+    dxF <- prepareDx(yearMF$yrF) ;
+    dxM <- prepareDx(yearMF$yrM) ;
+   
+    list(dxM=dxM,dxF=dxF)
+}
+
+
 prepareYearMFHx <- function(sT,yearStr) {
 
     yearMF <- prepareYearMF(sT,yearStr)
@@ -70,6 +84,75 @@ prepareYearMFHx <- function(sT,yearStr) {
     list(hxM=hxM,hxF=hxF)
 
 }
+
+
+mleWeibull <- function(ddF,startVal=c(0.02,10)) {
+
+    minusLogLikWeib <- function(para) {
+        b <- para[1] ; k <- para[2] ; n <- sum(dx) ;
+        logsum <- sum(dx*log(x)) ; xksum <- sum(dx*x^k)
+       -( n*log(k) + n*k*log(b) + (k-1)*logsum  - b^k*xksum )
+     
+     }
+
+    x <- ddF$x ; dx <- ddF$dx/sum(ddF$dx) ;
+    mleW <- nlm(minusLogLikWeib,startVal,hessian=T)
+
+    mleW
+
+}
+
+mleGompertz <- function(ddF,startVal=c(10*exp(-10),0.10)) {
+
+    minusLogLikGomp <- function(para) {
+        b <- para[2] ; eta <- para[1] ; n <- sum(dx) ;
+      #  if (b<0) b <- 1e-5 ;  if (eta<0) eta <- 1e-5 ;
+        xsum <- sum(dx*x) ; expsum <- sum(dx*exp(b*x))
+       - ( n*log(eta) + n*log(b) + n*eta + b*xsum  - eta*expsum )
+     
+     }
+
+    x <- ddF$x ; dx <- ddF$dx/sum(ddF$dx) ;
+    mleG <- nlm(minusLogLikGomp,startVal,hessian=T)
+
+    mleG
+
+}
+
+mleGompertzMakeham <- function(ddF,startVal=c(10*exp(-10),0.10,0.0002)) {
+
+    minusLogLikGompMak <- function(para) {
+        b <- para[2] ; eta <- para[1] ; lambda <- para[3] ;  n <- sum(dx) ;
+      #  if (b<0) b <- 1e-5 ;  if (eta<0) eta <- 1e-5 ; if (lambda<0) lambda <- 1e-5 ;
+        xsum <- sum(dx*x) ; expsum <- sum(dx*exp(b*x)) ;
+        logexpsum <- sum(dx*log(1+lambda/(b*eta*exp(b*x)))) ;
+       - (  n*log(eta) + n*log(b) + n*eta + b*xsum -lambda*xsum  + logexpsum  - eta*expsum )
+     
+     }
+
+    x <- ddF$x ; dx <- ddF$dx/sum(ddF$dx) ;
+    mleG <- nlm(minusLogLikGompMak,startVal,hessian=T)
+
+    mleG
+
+}
+
+mleGompertz3p <- function(ddF,startVal=c(10*exp(-10),0.10)) {
+
+    minusLogLikGomp <- function(para) {
+        b <- para[2] ;eta <- para[1] ; n <- sum(dx) ;
+        xsum <- sum(dx*x) ; expsum <- sum(dx*exp(b*x))
+       - ( n*log(eta) + n*log(b) + n*eta + b*xsum  - eta*expsum )
+     
+     }
+
+    x <- ddF$x ; dx <- ddF$dx/sum(ddF$dx) ;
+    mleG <- nlm(minusLogLikGomp,startVal,hessian=T)
+
+    mleG
+
+}
+
 
 
 estimGompertz3Parm <- function(hxMF) {

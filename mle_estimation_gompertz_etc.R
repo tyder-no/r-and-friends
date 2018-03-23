@@ -85,15 +85,25 @@ prepareYearMFHx <- function(sT,yearStr) {
 
 }
 
+minusLogLikWeib <- function(para) {
+    b <- para[1] ; k <- para[2] ;
+    n <- sum(dx) ;
+    logsum <- sum(dx*log(x)) ; xksum <- sum(dx*x^k)
+    -( n*log(k) + n*k*log(b) + (k-1)*logsum  - b^k*xksum )
+}
+
 
 mleWeibull <- function(ddF,startVal=c(0.02,10)) {
 
     minusLogLikWeib <- function(para) {
-        b <- para[1] ; k <- para[2] ; n <- sum(dx) ;
-        logsum <- sum(dx*log(x)) ; xksum <- sum(dx*x^k)
-       -( n*log(k) + n*k*log(b) + (k-1)*logsum  - b^k*xksum )
-     
-     }
+        b <- para[1] ; k <- para[2] ;  n <- sum(dx) ;
+        logsum <- sum(dx*log(x)) ; xksum <- sum(dx*x^k) ; xklogxsum <-  sum(dx*x^k*log(x)) ;
+        out <- -( n*log(k) + n*k*log(b) + (k-1)*logsum  - b^k*xksum )
+        attr(out, 'gradient') <- c(-(n * k / b - k * b^(k-1) * xksum) ,
+            -( n/k + n * log(b) + logsum - b^k * log(b) * xksum - b^k * xklogxsum) ) 
+        return(out)
+    }
+
 
     x <- ddF$x ; dx <- ddF$dx/sum(ddF$dx) ;
     mleW <- nlm(minusLogLikWeib,startVal,hessian=T)
@@ -106,12 +116,17 @@ mleGompertz <- function(ddF,startVal=c(10*exp(-10),0.10)) {
 
     minusLogLikGomp <- function(para) {
         b <- para[2] ; eta <- para[1] ; n <- sum(dx) ;
-      #  if (b<0) b <- 1e-5 ;  if (eta<0) eta <- 1e-5 ;
-        xsum <- sum(dx*x) ; expsum <- sum(dx*exp(b*x))
-       - ( n*log(eta) + n*log(b) + n*eta + b*xsum  - eta*expsum )
-     
-     }
+   #     if (b<0) b <- 1e-5 ;  if (eta<0) eta <- 1e-5 ;
+        xsum <- sum(dx*x) ; expsum <- sum(dx*exp(b*x)) ;
+        xexpsum <- sum(dx*exp(b*x)*x) ;
+        out <-  - ( n*log(eta) + n*log(b) + n*eta + b*xsum  - eta*expsum )
+        attr(out, 'gradient') <- c(-(n / eta + n - expsum) ,
+                                   -( n/b + xsum - eta *  xexpsum) ) 
+        return(out)
+    }
 
+
+    
     x <- ddF$x ; dx <- ddF$dx/sum(ddF$dx) ;
     mleG <- nlm(minusLogLikGomp,startVal,hessian=T)
 
@@ -121,14 +136,24 @@ mleGompertz <- function(ddF,startVal=c(10*exp(-10),0.10)) {
 
 mleGompertzMakeham <- function(ddF,startVal=c(10*exp(-10),0.10,0.0002)) {
 
+
     minusLogLikGompMak <- function(para) {
+
         b <- para[2] ; eta <- para[1] ; lambda <- para[3] ;  n <- sum(dx) ;
-      #  if (b<0) b <- 1e-5 ;  if (eta<0) eta <- 1e-5 ; if (lambda<0) lambda <- 1e-5 ;
-        xsum <- sum(dx*x) ; expsum <- sum(dx*exp(b*x)) ;
+     #  if (b<0) b <- 1e-5 ;  if (eta<0) eta <- 1e-5 ; if (lambda<0) lambda <- 1e-5 ;
+        xsum <- sum(dx*x) ; expsum <- sum(dx*exp(b*x)) ; xexpsum <- sum(dx*exp(b*x)*x) ;
+        etaDsum <- sum(dx*b*exp(b*x)/(b*eta*exp(b*x)+lambda)) ;
+        bDsum <- sum(dx*eta*(1+b*x)*exp(b*x)/(b*eta*exp(b*x)+lambda)) ;
+        lambdaDsum <- sum(dx*1/(b*eta*exp(b*x)+lambda)) ;
+        
         logexpsum <- sum(dx*log(1+lambda/(b*eta*exp(b*x)))) ;
-       - (  n*log(eta) + n*log(b) + n*eta + b*xsum -lambda*xsum  + logexpsum  - eta*expsum )
-     
-     }
+        out <- - (  n*log(eta) + n*log(b) + n*eta + b*xsum -lambda*xsum  + logexpsum  - eta*expsum )
+        attr(out, 'gradient') <- c(-(etaDsum + n / eta + n - expsum) ,
+                                   -(bDsum - eta *  xexpsum)
+                                   -(lambdaDsum -xsum )) 
+
+        return(out) 
+    }
 
     x <- ddF$x ; dx <- ddF$dx/sum(ddF$dx) ;
     mleG <- nlm(minusLogLikGompMak,startVal,hessian=T)

@@ -8,11 +8,14 @@ options(encoding="UTF-8")
 
 library(dplyr)
 library(ggplot2)
+library(optimx)
+
 
 source("ssb-json-functions.R")
 source("ssb_mortality_table_testing.R")
 
 graphics.off()
+
 
 
 saveAsRExpression <- function(dFrame,fileName,saveDir="../data/") {
@@ -312,6 +315,8 @@ processingGompertz2 <- function(sT,mkPlotSlct=1,regrStart=50) {
     
 }
 
+
+# load("../data/sT-2018.RData")
 #> x <- 30:105
 #> p3 <- g3p2017$hff$estimate
 #> y <- p3[2]*x^p3[1]+(p3[1]-1)*log(x)+p3[3]
@@ -327,5 +332,12 @@ processingGompertz2 <- function(sT,mkPlotSlct=1,regrStart=50) {
 #> q3 <- g3p1967$hfm$estimate
 #>  y4 <- q3[2]*x^q3[1]+(q3[1]-1)*log(x)+q3[3]
 #>  points(x,y4,pch=2,col=4)
+# dx2017 <-  prepareYearMFDx(sT,"2017")
+#
+#
+#
+
+
+
 
 

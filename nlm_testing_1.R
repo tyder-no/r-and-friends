@@ -61,23 +61,34 @@ fGompAugm5p0  <- function(x,para) {
 
     hxfunc <-(c*(x-h)^3 + xepsi*(x-h)) * exp(-d*(x-h)^2) ;
     ldxfunc <- 1 + (-2*d*(x-h)*(c*(x-h)^3 + xepsi*(x-h)) + 3*c*(x-h)^2 + xepsi)*exp(-d*(x-h)^2) ;
-    
-    
     b*ldxfunc*exp(a*(x + hxfunc))*exp(-b/a*exp(a*(x+hxfunc)) + b/a)
    
 }
 
 fGompAugm5p  <- function(x,para,pPrt=0) {
-    a <- para[1] ; b <- para[2] ;   c <- para[3] ; d <- para[4] ; h <- para[5] ; xepsi <- 1e-7 ; l <- 1 ;
+    a <- para[1] ; b <- para[2] ;   c <- para[3] ; d <- para[4] ; h <- para[5] ; xepsi <- 2 ; l <- 1 ;
     diffact <- ifelse(x<h,-1,1) ;
     
-    hxfunc <-c*((x-h)^3 + 3*(x-h))/(l + exp(d*abs(x-h))) ;  #print(paste('--hxfunc: ',hxfunc)) ;
-    ldxfunc <- 1 + 3*c*((x-h)^2 + 1)/(l + exp(d*abs(x-h))) + -d*c*diffact*((x-h)^3 + 3*(x-h))*exp(d*abs(x-h))/(l + exp(d*abs(x-h)))^2 ;
+    hxfunc <-c*((x-h)^3 + 3*xepsi*(x-h))/(l + exp(d*abs(x-h))) ;  #print(paste('--hxfunc: ',hxfunc)) ;
+    ldxfunc <- 1 + 3*c*((x-h)^2 + 1*xepsi)/(l + exp(d*abs(x-h))) + -d*c*diffact*((x-h)^3 + 3*xepsi*(x-h))*exp(d*abs(x-h))/(l + exp(d*abs(x-h)))^2 ;
     if (pPrt==1)  print(paste('--hxfunc: ',hxfunc,' --ldxfunc: ',ldxfunc)) ;
    # ldxfunc <- 1 ;
     b*ldxfunc*exp(a*(x + hxfunc))*exp(-b/a*exp(a*(x+hxfunc)) + b/a)
    
 }
+
+fGompMakAugm6p  <- function(x,para,pPrt=0) {
+    a <- para[1] ; b <- para[2] ;   c <- para[3] ; d <- para[4] ; h <- para[5] ; lmbd <- para[6] ; xepsi <- 2 ; l <- 1 ;
+    diffact <- ifelse(x<h,-1,1) ;
+    
+    hxfunc <-c*((x-h)^3 + 3*xepsi*(x-h))/(l + exp(d*abs(x-h))) ;  #print(paste('--hxfunc: ',hxfunc)) ;
+    ldxfunc <- 1 + 3*c*((x-h)^2 + 1*xepsi)/(l + exp(d*abs(x-h))) + -d*c*diffact*((x-h)^3 + 3*xepsi*(x-h))*exp(d*abs(x-h))/(l + exp(d*abs(x-h)))^2 ;
+    if (pPrt==1)  print(paste('--hxfunc: ',hxfunc,' --ldxfunc: ',ldxfunc)) ;
+   # ldxfunc <- 1 ;
+    (b*ldxfunc*exp(a*(x + hxfunc)) + lmbd)*exp(-lmbd*x  - b/a*exp(a*(x+hxfunc)) + b/a)
+   
+}
+
 
 
 lfGompAugm5p  <- function(x,para) {
@@ -92,7 +103,7 @@ lfGompAugm5p  <- function(x,para) {
 minusLogLikGompAugm5p0  <- function(para) {
 
     a <- para[1] ; b <- para[2] ;   c <- para[3] ; d <- para[4] ; h <- para[5] ;
-    n <- sum(dx) ; xepsi <- 1e-7 ;
+    n <- sum(dx) ; xepsi <- 1e-2 ;
 
     hxfunc <-(c*(x-h)^3 + xepsi*(x-h)) * exp(-d*(x-h)^2)
     ldxfunc <- 1 + (-2*d*(x-h)*(c*(x-h)^3 + xepsi*(x-h)) + 3*c*(x-h)^2 + xepsi)*exp(-d*(x-h)^2) ;
@@ -107,11 +118,11 @@ minusLogLikGompAugm5p0  <- function(para) {
 minusLogLikGompAugm5p  <- function(para) {
 
     a <- para[1] ; b <- para[2] ;   c <- para[3] ; d <- para[4] ; h <- para[5] ;
-    n <- sum(dx) ; xepsi <- 1e-7 ; l <- 1 ;
+    n <- sum(dx) ; xepsi <- 2 ; l <- 1 ;
 
-    hxfunc <-c*((x-h)^3 + 3*(x-h)) /(l+ exp(d*abs(x-h)))
+    hxfunc <-c*((x-h)^3 + 3*xepsi*(x-h)) /(l+ exp(d*abs(x-h)))
     diffact <- ifelse(x<h,-1,1)
-    ldxfunc <- 1 +  3*l*c*((x-h)^2 + 1)/ (l + exp(d*abs(x-h))) -d*c*diffact*((x-h)^3 + 3*(x-h))*exp(d*abs(x-h))/(l + exp(d*abs(x-h)))^2 ;
+    ldxfunc <- 1 +  3*l*c*((x-h)^2 + 1*xepsi)/ (l + exp(d*abs(x-h))) -d*c*diffact*((x-h)^3 + 3*xepsi*(x-h))*exp(d*abs(x-h))/(l + exp(d*abs(x-h)))^2 ;
     
     logdxsum <- sum(dx*log(ldxfunc)) ;      
     xsum <- sum(dx*(x + hxfunc)) ; expsum <- sum(dx*exp(a*(x + hxfunc))) ;
@@ -120,6 +131,24 @@ minusLogLikGompAugm5p  <- function(para) {
     
 }
 
+minusLogLikGompMakAugm6p  <- function(para) {
+
+    a <- para[1] ; b <- para[2] ;   c <- para[3] ; d <- para[4] ; h <- para[5] ; lmbd <- para[6] ;
+    n <- sum(dx) ; xepsi <- 2 ; l <- 1 ;
+
+    hxfunc <-c*((x-h)^3 + 3*xepsi*(x-h)) /(l+ exp(d*abs(x-h)))
+    diffact <- ifelse(x<h,-1,1)
+    ldxfunc <- 1 +  3*l*c*((x-h)^2 + 1*xepsi)/ (l + exp(d*abs(x-h))) -d*c*diffact*((x-h)^3 + 3*xepsi*(x-h))*exp(d*abs(x-h))/(l + exp(d*abs(x-h)))^2 ;
+    
+    logdxsum <- sum(dx*log(ldxfunc)) ;      
+    xsum <- sum(dx*x) ; expsum <- sum(dx*exp(a*(x + hxfunc))) ;
+
+    logexpplusl <- log(b*exp(a*(x + hxfunc))*ldxfunc + lmbd) ; logexppluslsum <- sum(dx*logexpplusl) ;
+    -(logexppluslsum - lmbd*xsum + ((-b)/a)*expsum + n*b/a);
+  
+
+    
+}
 
 
 
@@ -362,14 +391,43 @@ checkAllModels <- function(dX) {
     list(loglik=loglik,nparm=nparm,mres=mres) 
 }
 
-compPlot <- function(x,dx,p2,p5) {
+   startW <- c( 0.02, 8) ;    w2x<-optimx(startW,fn=minusLogLikWeib,method=c("nlminb"),lower=c(0.01,1))
+
+
+compPlot5p <- function(x,dx,p2,p5,p2w=c(0.01127964,9.132166)) {
     
     X11() ;
-    curve(100000*fGompAugm5p(x,p5),from = 0, to = 106,col=3)
+    curve(100000*fGompAugm5p(x,p5),from = 0, to = 106,col=3,lwd=2)
+    points(x,dx,type="l",col=1,lty=2,lwd=2)
+    curve(100000*dgompertz(x,p2[1],p2[2]),col=4,lwd=2,add=T)
+    curve(100000*dweibull(x,p2w[2],1/p2w[1]),col=6,lty=3,lwd=2,add=T)
+
+}
+
+compPlot6p <- function(x,dx,p2,p6) {
+    
+    X11() ;
+    curve(100000*fGompMakAugm6p(x,p6),from = 0, to = 106,col=3)
     points(x,dx,type="l",col=1,lty=2)
     curve(100000*dgompertz(x,p2[1],p2[2]),col=4,add=T)
 
 }
+
+
+movAve3 <- function(y,w=c(1,1,1)) {
+    n <- length(y) ;
+    y0 <- c(y[1],y,y[n]) ;
+    yp <- c(y[1],y[1],y) ;
+    yf <- c(y,y[n],y[n]) ;
+    yma <- (yp*w[1]+y0*w[2]+yf*w[3])/sum(w)
+    yma[2:(n+1)]
+}
+
+
+# p5 <- c(0.1006834, 1.238178e-05, 0.01376734, 0.2030082, 90.5   )
+
+
+#compPlot(x,dx,p2,p5)
 
 #w2x         p1       p2    value fevals gevals niter convcode kkt1  kkt2
 #nlminb 0.01127964 9.132166 386771.3     25     34    12        0 TRUE FALSE
@@ -381,9 +439,17 @@ compPlot <- function(x,dx,p2,p5) {
 #nlminb 0.01176981 6.392421e-06 1.436836 373191.8    200    389   118        1
 #g5x         p1           p2         p3        p4   p5         value fevals
 #nlminb   0.109981 5.994283e-06 0.03692791 0.3438071 92.5  373312    199
+# g6x        p1           p2         p3        p4       p5           p6      value fevals gevals niter convcode 
+#nlminb   0.1093708 6.048863e-06 0.03983736 0.3460905 91.57632 0.0004999988  373140  28     24     4        1   
+# g6x        p1           p2         p3        p4       p5           p6    value fevals gevals niter convcode kkt1 kkt2 xtimes
+#nlminb   0.1190457 2.757254e-06 0.03136957 0.4043552 92.50002 0.0001964004 372204.5    200    547    71        1   NA   NA  0.076
+# g5x        p1           p2         p3        p4   p5         value fevals
+#nlminb   0.108987 6.419392e-06 0.03849455 0.3461503 91.5  373235.1    134
+# g5x        p1           p2         p3        p4   p5         value fevals
+#nlminb   0.115 3.913839e-06 0.03849455 0.3461503 92.5  373461.5     29
 
   
-
+#p5 <- c(0.1093708, 6.215833e-06, 0.03983736, 0.3460905, 91.57632)
 
 
 
@@ -410,6 +476,7 @@ compPlot <- function(x,dx,p2,p5) {
 #  g3x<-optimx(startG3,fn=minusLogLikGomp3p,method=c("Nelder-Mead","BFGS","nlm","L-BFGS-B","nlminb"),lower=c(0,0,0))
 #  g4Mx<-optimx(startGM4,fn=minusLogLikGompMak4p,method=c("Nelder-Mead","BFGS","nlm","L-BFGS-B","nlminb"),lower=c(0,0,0,0))
 #  g5x<-optimx(startG5,fn=minusLogLikGompAugm5p,method=c("Nelder-Mead","BFGS","nlm","L-BFGS-B","nlminb"),lower=c(0,0,0,0,0))
+#  g6x<-optimx(p6,fn=minusLogLikGompMakAugm6p,method=c("Nelder-Mead","BFGS","nlm","L-BFGS-B","nlminb"),lower=c(0,0,0,0,0,0))
 
 
 

@@ -317,6 +317,8 @@ processingGompertz2 <- function(sT,mkPlotSlct=1,regrStart=50) {
 
 
 # load("../data/sT-2018.RData")
+# dx2017 <- prepareYearMFDx(sT,"2017") ; x <- dx2017$dxF$x ;  dx <- dx2017$dxF$dx ; 
+
 #> x <- 30:105
 #> p3 <- g3p2017$hff$estimate
 #> y <- p3[2]*x^p3[1]+(p3[1]-1)*log(x)+p3[3]

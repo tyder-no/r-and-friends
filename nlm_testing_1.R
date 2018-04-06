@@ -5,6 +5,8 @@ options(encoding="UTF-8")
 #
 #library(ggplot)
 library(optimx)
+library(flexsurv)
+
 
 flincorr <- function(x,para) {
     a <- para[1] ; b <- para[2] ; c <- para[3] ; d <- para[4] ; h <- para[5] ;
@@ -65,14 +67,29 @@ fGompAugm5p0  <- function(x,para) {
    
 }
 
+fGompMak  <- function(x,para,pPrt=0) {
+    a <- para[1] ; b <- para[2] ;  lmbd <- para[3] ; xepsi <- 2 ; l <- 1 ;
+    (b*exp(a*x) + lmbd)*exp(-lmbd*x  - b/a*exp(a*x) + b/a)
+}
+
+fGomp3p  <- function(x,para,pPrt=0) {
+    a <- para[1] ; b <- para[2] ;  k <- para[3] ; xepsi <- 2 ; l <- 1 ;
+    b*k*exp(a*x^k)*x^(k-1)*exp( - b/a*exp(a*x^k) + b/a)
+}
+
+fGompMak4p  <- function(x,para,pPrt=0) {
+    a <- para[1] ; b <- para[2] ;  lmbd <- para[3] ; k <- para[4] ; xepsi <- 2 ; l <- 1 ;
+    (b*k*exp(a*x)*x^(k-1) + lmbd)*exp(-lmbd*x  - b/a*exp(a*x^k) + b/a)
+}
+
+
 fGompAugm5p  <- function(x,para,pPrt=0) {
     a <- para[1] ; b <- para[2] ;   c <- para[3] ; d <- para[4] ; h <- para[5] ; xepsi <- 2 ; l <- 1 ;
     diffact <- ifelse(x<h,-1,1) ;
     
-    hxfunc <-c*((x-h)^3 + 3*xepsi*(x-h))/(l + exp(d*abs(x-h))) ;  #print(paste('--hxfunc: ',hxfunc)) ;
+    hxfunc <-c*((x-h)^3 + 3*xepsi*(x-h))/(l + exp(d*abs(x-h))) ; 
     ldxfunc <- 1 + 3*c*((x-h)^2 + 1*xepsi)/(l + exp(d*abs(x-h))) + -d*c*diffact*((x-h)^3 + 3*xepsi*(x-h))*exp(d*abs(x-h))/(l + exp(d*abs(x-h)))^2 ;
     if (pPrt==1)  print(paste('--hxfunc: ',hxfunc,' --ldxfunc: ',ldxfunc)) ;
-   # ldxfunc <- 1 ;
     b*ldxfunc*exp(a*(x + hxfunc))*exp(-b/a*exp(a*(x+hxfunc)) + b/a)
    
 }
@@ -391,16 +408,38 @@ checkAllModels <- function(dX) {
     list(loglik=loglik,nparm=nparm,mres=mres) 
 }
 
-   startW <- c( 0.02, 8) ;    w2x<-optimx(startW,fn=minusLogLikWeib,method=c("nlminb"),lower=c(0.01,1))
+#   startW <- c( 0.02, 8) ;    w2x<-optimx(startW,fn=minusLogLikWeib,method=c("nlminb"),lower=c(0.01,1))
 
-
-compPlot5p <- function(x,dx,p2,p5,p2w=c(0.01127964,9.132166)) {
+compPlot3p <- function(x,dx,p2,p3,pm3,p2w=c(0.01127964,9.132166),savePng=0,ylim=c(0,5000)) {
     
-    X11() ;
-    curve(100000*fGompAugm5p(x,p5),from = 0, to = 106,col=3,lwd=2)
+    if (savePng==0) X11() ;
+    if (savePng==1) png(filename='overhaul_gomp_f1.png',width=800,height=800) ;
+    
+    curve(100000*fGomp3p(x,p3),from = 0, to = 106,ylim=ylim,col=3,lwd=2,xlab="Age",ylab="Deaths")
     points(x,dx,type="l",col=1,lty=2,lwd=2)
+    curve(100000*fGompMak(x,pm3),col=2,lwd=2,add=T)
+
     curve(100000*dgompertz(x,p2[1],p2[2]),col=4,lwd=2,add=T)
     curve(100000*dweibull(x,p2w[2],1/p2w[1]),col=6,lty=3,lwd=2,add=T)
+    legend(2,4900,lty=c(2,1,1,1,3),col=c(1,4,2,3,6), lwd=c(2,2,2,2,2),legend=c("Deaths","Gompertz","Gompertz-Makeham","Gompertz exp(ax^k)","Weibull"))
+
+    if (savePng==1) dev.off() ;
+}
+
+
+
+compPlot5p <- function(x,dx,p2,p5,p2w=c(0.01127964,9.132166),savePng=0,ylim=c(0,5000),clr=2,drawLeg=0,yr=2017) {
+    
+ 
+   # if (savePng==0) X11() ;
+    if (savePng==1) png(filename='overhaul_gomp_f2.png',width=800,height=800) ;
+    if (clr==2) mainT <- ""  else mainT <- paste("Year:",yr  ) ;
+    curve(100000*fGompAugm5p(x,p5),from = 0, to = 106,ylim=ylim,col=clr,lwd=2,xlab="Age",ylab="Deaths", main=mainT)
+    points(x,dx,type="l",col=1,lty=2,lwd=2)
+    curve(100000*dgompertz(x,p2[1],p2[2]),lty=3,col=clr,lwd=2,add=T)
+    if (drawLeg==1) legend(2,4900,lty=c(2,1,3),col=c(1,clr,clr), lwd=c(2,2,2),legend=c("Deaths","Gompertz overhauled","Gompertz basic")) ;
+
+    if (savePng==1) dev.off() ;
 
 }
 
@@ -409,9 +448,56 @@ compPlot6p <- function(x,dx,p2,p6) {
     X11() ;
     curve(100000*fGompMakAugm6p(x,p6),from = 0, to = 106,col=3)
     points(x,dx,type="l",col=1,lty=2)
-    curve(100000*dgompertz(x,p2[1],p2[2]),col=4,add=T)
+    curve(100000*dgompertz(x,p2[1],p2[2]),col=4,add=T,lty=3)
+
 
 }
+
+
+overhaulPanel <- function(savePng=0) {
+    graphics.off() ;
+   
+    if (savePng==0) X11(width=7,height=12) ;
+    if (savePng==1) png(filename='overhaul_gomp_f3.png',width=800,height=1300) ;
+    par(mfrow=c(4,2)) ;
+    
+    dx1967 <- prepareYearMFDx(sT,"1967") ;
+ # M 1967
+    x <- dx1967$dxM$x ;  dx <- dx1967$dxM$dx ;
+    p2 <- c(0.0867, 0.000092); p5 <- c(0.088, 0.00008, 0.001, 0.1330523, 85.5) ; compPlot5p(x,dx,p2,p5,clr=4,drawLeg=1,yr=1967) ;
+ # F 1967
+    x <- dx1967$dxF$x ;  dx <- dx1967$dxF$dx ;
+    p2 <- c(0.108, 1.245738e-05) ; p5 <- c(0.108, 1.266084e-05, 0.015, 0.5, 82) ; compPlot5p(x,dx,p2,p5,yr=1967) ;
+
+    dx1997 <- prepareYearMFDx(sT,"1997") ;
+ # M 1997
+    x <- dx1997$dxM$x ;  dx <- dx1997$dxM$dx ;
+    p2 <- c(0.09635933, 3.68891e-05) ; p5 <- c( 0.0985, 2.95e-05, 0.032, 0.5, 83) ; compPlot5p(x,dx,p2,p5,clr=4,drawLeg=0,yr=1997) ;
+ # F 1997
+    x <- dx1997$dxF$x ;  dx <- dx1997$dxF$dx ;
+    p2 <- c( 0.1028357, 1.41335e-05) ;  p5 <- c(0.115, 4.825569e-06, 0.008, 0.35, 91   ) ; compPlot5p(x,dx,p2,p5,yr=1997) ;
+                                        
+    dx2007 <- prepareYearMFDx(sT,"2007") ;
+ # M 2007
+    x <- dx2007$dxM$x ;  dx <- dx2007$dxM$dx ;
+    p2 <- c(0.1028357, 1.804533e-05); p5 <- c( 0.115, 6.914726e-06, 0.008, 0.35, 91) ; compPlot5p(x,dx,p2,p5,clr=4,drawLeg=0,yr=2007) ;
+ # F 2007
+    x <- dx2007$dxF$x ;  dx <- dx2007$dxF$dx ;
+    p2 <- c( 0.1119258, 5.854791e-06) ;p5 <- c(0.1004395, 1.521759e-05, 0.01882413, 0.215882, 92.5  ) ; compPlot5p(x,dx,p2,p5,yr=2007) ;
+
+    dx2017 <- prepareYearMFDx(sT,"2017") ;
+ # M 2017
+    x <- dx2017$dxM$x ;  dx <- dx2017$dxM$dx ;                                     
+    p2 <- c(0.109486, 8.507181e-06) ; p5 <- c(0.1002597,1.847507e-05,0.01430287,0.2028746,92.5);  compPlot5p(x,dx,p2,p5,clr=4,drawLeg=0,yr=2017) ;
+ # F 2017   
+    x <- dx2017$dxF$x ;  dx <- dx2017$dxF$dx ; 
+    p2 <- c(0.118,3.19e-06) ; p5 <- c(0.115,3.913839e-06,0.03849455,0.3461503,92.5) ; compPlot5p(x,dx,p2,p5,yr=2017) ;
+  
+    if (savePng==1)  dev.off() ;
+
+}
+
+  
 
 
 movAve3 <- function(y,w=c(1,1,1)) {
@@ -424,7 +510,8 @@ movAve3 <- function(y,w=c(1,1,1)) {
 }
 
 
-# p5 <- c(0.1006834, 1.238178e-05, 0.01376734, 0.2030082, 90.5   )
+
+#p2 <- c(0.118,3.19e-06) ; p3 <- c(0.0118,6.392e-06,1.437) ; p3m <- c(0.125,1.665e-06,0.000234) ;
 
 
 #compPlot(x,dx,p2,p5)
@@ -448,13 +535,27 @@ movAve3 <- function(y,w=c(1,1,1)) {
 # g5x        p1           p2         p3        p4   p5         value fevals
 #nlminb   0.115 3.913839e-06 0.03849455 0.3461503 92.5  373461.5     29
 
-  
-#p5 <- c(0.1093708, 6.215833e-06, 0.03983736, 0.3460905, 91.57632)
+
+#p2 <- c(0.118,3.19e-06) ; p3 <- c(0.0118,6.392e-06,1.437) ; p3m <- c(0.125,1.665e-06,0.000234) ;
 
 
+                                     #p5 <- c(0.1093708, 6.215833e-06, 0.03983736, 0.3460905, 91.57632)
+                                        # Very good fit... dxF2017
+   
 
 
+                                        # M2017
+#    p5 <- c( 0.115, 3.913839e-06, 0.03849455, 0.3461503, 92.5   );
+#    g5x<-optimx(p5,fn=minusLogLikGompAugm5p,method=c("Nelder-Mead","BFGS","nlm","L-BFGS-B","nlminb"),lower=c(0,0,0,0,0)) ;
+#  
 
+
+# dx2016 <- prepareYearMFDx(sT,"2016") ; x <- dx2016$dxF$x ;  dx <- dx2016$dxF$dx ;
+# F2016
+# p2 <- c( 0.1169112, 3.406272e-06); p5 <- c(0.1067405,7.906248e-06,0.02289794,0.2607802,92.5) ; compPlot5p(x,dx,p2,p5) ;
+# M2016 
+# x <- dx2016$dxM$x ;  dx <- dx2016$dxM$dx ;
+# p2 <- c(0.107513,1.010393e-05);  p5 <- c(0.09925484,1.958454e-05,0.02686547,0.2784424,90.5); compPlot5p(x,dx,p2,p5) ;
 
 
 # source("gompertz_fitting_1.R")

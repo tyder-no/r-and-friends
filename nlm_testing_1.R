@@ -579,6 +579,11 @@ movAve3 <- function(y,w=c(1,1,1)) {
 #  g5x<-optimx(startG5,fn=minusLogLikGompAugm5p,method=c("Nelder-Mead","BFGS","nlm","L-BFGS-B","nlminb"),lower=c(0,0,0,0,0))
 #  g6x<-optimx(p6,fn=minusLogLikGompMakAugm6p,method=c("Nelder-Mead","BFGS","nlm","L-BFGS-B","nlminb"),lower=c(0,0,0,0,0,0))
 
+# F2017
+# 0.1176342 3.189598e-06
+#p2 <- c(0.118,3.19e-06) ;
+
+
 
 
 #minusLogLikGompAugm5p 

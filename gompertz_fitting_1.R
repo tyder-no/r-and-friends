@@ -7,6 +7,7 @@
 library(dplyr)
 library(ggplot2)
 library(flexsurv)
+library(optimx)
 
 source("ssb-json-functions.R")
 source("ssb_mortality_table_testing.R")
@@ -301,8 +302,19 @@ testMakehamHazard <- function(lambda0,lambdaStep=1.1,a=-11.5,b=0.105) {
 
 
 
-    
 
+p2 <- c(0.118,3.19e-06) ;
+
+dxGomp <- function(n,p2) {
+    rgF <- rgompertz(n,p2[1],p2[2])
+    rgT <- round(rgF)
+    rgMax <- max(rgT) ;
+    tG <-table(rgT)
+    tgVect <- rep(0,(rgMax+1)) ;
+    tgVect[(as.numeric(names(tG))+1)] <- tG[names(tG)]
+    x <- 0:rgMax
+    list(x=x,dx=tgVect)    
+}
 
 #sT <- getSurvivalTable()
 # y1967 <- prepareYear(sT,"1967")
